@@ -1,0 +1,7 @@
+PyQt6>=6.5
+pyserial>=3.5
+matplotlib>=3.6
+pillow>=10.0
+# Opcionales — solo necesarios para instrumentos específicos:
+# hidapi>=0.14      # Necesario para: UNI-T UT-61E+ (USB HID)
+# bleak>=0.21       # Necesario para: EEVBlog 121GW (Bluetooth LE)

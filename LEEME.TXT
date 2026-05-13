@@ -1,0 +1,51 @@
+===========================================================
+               DMMVIEW - GUIA MULTIPLATAFORMA
+===========================================================
+
+DMMView ha sido diseñado para ejecutarse nativamente tanto en 
+Linux como en Windows.
+
+USO NORMAL (CON PYTHON INSTALADO):
+-----------------------------------------------------------
+- En Linux (Mint/Ubuntu, etc):
+  Abre una terminal en esta carpeta y ejecuta:
+  python3 dmmview.py
+
+  *Nota:* Si tu usuario no pertenece al grupo 'dialout', 
+  el programa te lo advertirá, ya que Linux requiere esto 
+  para conectarse a los puertos serie y USB HID sin ser root.
+
+- En Windows (10/11):
+  Abre una terminal o CMD en esta carpeta y ejecuta:
+  python dmmwin.py
+
+
+CREAR UN EJECUTABLE (.EXE) INDEPENDIENTE PARA WINDOWS:
+-----------------------------------------------------------
+Si deseas utilizar DMMView en otras computadoras con Windows 
+sin tener que instalar Python en cada una de ellas, puedes 
+empaquetar el software en un único archivo ejecutable.
+
+Pasos:
+1. Copia toda esta carpeta del proyecto a una computadora 
+   con Windows que sí tenga Python instalado.
+2. Haz doble clic en el archivo `build_windows.bat`.
+3. El script hará lo siguiente de forma automática:
+   - Instalará PyInstaller.
+   - Instalará todas las dependencias (PyQt6, pyserial, hidapi).
+   - Compilará tu código fuente.
+4. Cuando termine, aparecerá una nueva carpeta llamada "dist".
+5. Entra a la carpeta "dist" y encontrarás "DMMView.exe".
+
+¡Listo! Ese "DMMView.exe" es un archivo portátil. Puedes 
+copiarlo a un pendrive y llevarlo a cualquier otra máquina 
+Windows 10/11 y funcionará instantáneamente con un doble clic.
+
+-----------------------------------------------------------
+Notas sobre Drivers en Windows:
+Para multímetros USB HID (como el UNI-T UT-61E+ o UT-181A), 
+el chip interno es un CP2110. Generalmente Windows 10/11 lo 
+detecta de forma nativa, pero si el equipo no conecta, debes 
+instalar el driver "CP211x" proporcionado por Silicon Labs.
+Para los puertos serie genéricos (OWON, VICTOR), asegúrate 
+de tener instalados los drivers CH340 u originales.
