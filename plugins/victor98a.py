@@ -48,7 +48,7 @@ FUNC_MAP = {
     (0x33, 0x31): {'name': 'ACµA+DCµA', 'unit': 'µA', 'ac': True},
     (0x33, 0x32): {'name': 'ACmA+DCmA', 'unit': 'mA', 'ac': True},
     (0x33, 0x33): {'name': 'ACA+DCA',   'unit': 'A',  'ac': True},
-    (0x33, 0x34): {'name': 'MEM',       'unit': '',   'ac': False},
+    (0x33, 0x34): {'name': 'ACV~ VFC',  'unit': 'V',  'ac': True},
 }
 
 # ──────────────────────────────────────────────────────────────────────
@@ -56,13 +56,14 @@ FUNC_MAP = {
 # ──────────────────────────────────────────────────────────────────────
 RANGE_MAP = {
     'ACV':    {0x30: '2V',    0x31: '20V',   0x32: '200V',  0x33: '1000V'},
+    'ACV~ VFC': {0x30: '1000V', 0x31: '2V',  0x32: '20V',   0x33: '200V'},
     'dBm_V':  {0x30: '2V',    0x31: '20V',   0x32: '200V',  0x33: '1000V'},
     'ACmV':   {0x30: '200mV'},
     'dBm_mV': {0x30: '200mV'},
     'DCV':    {0x30: '2V',    0x31: '20V',   0x32: '200V',  0x33: '1000V'},
     'DCmV':   {0x30: '200mV'},
     'TC_K':   {0x30: 'K'},
-    'CONT':   {0x30: '600Ω'},
+    'CONT':   {0x30: '200Ω'},
     'DIODE':  {0x30: '2V'},
     'OHM':    {0x30: '200Ω',  0x31: '2kΩ',   0x32: '20kΩ',  0x33: '200kΩ',
                0x34: '2MΩ',   0x35: '20MΩ',  0x36: '60MΩ'},
@@ -268,6 +269,13 @@ class Victor98APlugin(BaseDMMPlugin):
                          'unit': '', 'ac': False}
 
         func_name = func_info['name']
+
+        # Swap secondary and tertiary data for +Hz functions
+        # The device sends Duty Cycle in data2 and AC value in data3,
+        # but the UI prefers AC value (Voltage/Current) in Secondary (Left) and Duty Cycle (%) in Tertiary (Right).
+        if '+Hz' in func_name:
+            data2, data3 = data3, data2
+            range2, range3 = range3, range2
         base_unit = func_info['unit']
 
         # Parse range
@@ -398,11 +406,9 @@ class Victor98APlugin(BaseDMMPlugin):
         if not val_str:
             return 0.0, '', False
 
-        # Check for overload (FFFFFFF or OL)
-        if val_str.replace('F', '') == '' and len(val_str) >= 4:
-            return float('inf'), 'OL', True
-
-        if val_str in ('OL', 'O.L', 'OL.'):
+        # Check for overload (FFFFFFF, +FFFFFF, -FFFFFF, OL, etc.)
+        clean_val = val_str.replace('+', '').replace('-', '').strip()
+        if (clean_val.replace('F', '') == '' and len(clean_val) >= 4) or 'OL' in clean_val or 'O.L' in clean_val:
             return float('inf'), 'OL', True
 
         try:
@@ -451,27 +457,12 @@ class Victor98APlugin(BaseDMMPlugin):
         if 'dBm' in func_name:
             # Secondary is the voltage value
             return 'V' if 'V' in func_name and 'mV' not in func_name else 'mV'
-        if 'TC' in func_name or 'RTD' in func_name:
-            return 'mV'  # Cold junction or resistance
-        if '+Hz' in func_name:
-            return '%'   # Duty cycle
-        if '+DC' in func_name:
-            return 'V' if 'V' in func_name else 'A'
-        if 'PEAK' in func_name:
-            return self._unit_from_range('', FUNC_MAP.get(
-                self._func_code_from_name(func_name), {}).get('unit', ''))
-        return ''
-
-    def _get_tertiary_unit(self, func_name: str, range_code: int) -> str:
-        """Determine tertiary value unit based on function."""
-        if 'dBm' in func_name:
-            return 'dBm'  # Reference
         if 'TC' in func_name:
-            return '°C'   # Temperature unit
+            return 'mV'  # Cold junction
         if 'RTD' in func_name:
-            return '°C'
+            return 'kΩ'  # Sensor resistance in kΩ
         if '+Hz' in func_name:
-            # Tertiary is the AC value
+            # Secondary is the AC value (swapped)
             if 'mV' in func_name:
                 return 'mV'
             elif 'V' in func_name:
@@ -482,6 +473,24 @@ class Victor98APlugin(BaseDMMPlugin):
                 return 'mA'
             elif 'A' in func_name:
                 return 'A'
+        if '+DC' in func_name:
+            return 'V' if 'V' in func_name else 'A'
+        if 'PEAK' in func_name:
+            return self._unit_from_range('', FUNC_MAP.get(
+                self._func_code_from_name(func_name), {}).get('unit', ''))
+        return ''
+
+    def _get_tertiary_unit(self, func_name: str, range_code: int) -> str:
+        """Determine tertiary value unit based on function."""
+        if 'dBm' in func_name:
+            return 'Ω'  # Reference resistance is in ohms
+        if 'TC' in func_name:
+            return '°C'   # Temperature unit
+        if 'RTD' in func_name:
+            return '°C'
+        if '+Hz' in func_name:
+            # Tertiary is the Duty Cycle (swapped)
+            return '%'
         if '+DC' in func_name:
             # Tertiary is the DC component
             if 'mV' in func_name:

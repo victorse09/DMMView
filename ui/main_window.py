@@ -800,25 +800,62 @@ class MainWindow(QMainWindow):
     # ── About Dialog ─────────────────────────────────────────────
 
     def _show_instructions(self):
-        QMessageBox.about(self, "Instrucciones de Uso",
-            "<h2>Instrucciones de DMMView</h2>"
-            "<p><b>Conexión:</b> Seleccione su multímetro, configure el puerto (si aplica) y presione Conectar.</p>"
-            "<p><b>Medición en Vivo:</b> Muestra el último valor leído de forma destacada, incluyendo estadísticas básicas (mín, máx, promedio).</p>"
-            "<p><b>Registro de Datos (Logging):</b> Permite grabar las lecturas en tiempo real y exportarlas a un archivo CSV para análisis posterior. Utilice los botones de Inicio/Parada.</p>"
-            "<p><b>Gráficos:</b> Visualice la tendencia temporal de las mediciones y la distribución en un histograma. Haga uso de las herramientas de Zoom para enfocar un área, y pase el cursor (hover) para ver el valor exacto en un punto dado.</p>"
-            "<p><b>Memoria del DMM:</b> Permite descargar los registros guardados internamente en los multímetros que soportan esta función (como registros manuales o temporizados).</p>")
+        instructions_html = (
+            "<h2>Instrucciones de Uso - DMMView</h2>"
+            "<h3>1. Conexión del Instrumento</h3>"
+            "<ul>"
+            "<li><b>Selección:</b> Elija su multímetro en el menú desplegable del panel izquierdo.</li>"
+            "<li><b>Puerto Serie / HID:</b> Para conexiones serie, seleccione el puerto COM/ttyUSB correcto. Para UNI-T UT-61E+ / UT-181A que usan HID USB, la aplicación detectará el dispositivo automáticamente (en Linux asegúrese de tener permisos de acceso al puerto serie/HID en el grupo <i>dialout</i> o mediante reglas udev).</li>"
+            "<li><b>Conectar/Desconectar:</b> Use el botón 'Conectar' para iniciar la comunicación.</li>"
+            "</ul>"
+            "<h3>2. Medición en Vivo</h3>"
+            "<ul>"
+            "<li><b>Pantalla Principal:</b> Muestra la lectura actual con su unidad correspondiente y barra analógica dinámica.</li>"
+            "<li><b>Lecturas Secundarias/Terciarias:</b> Ciertas funciones muestran lecturas adicionales (ej. frecuencia y ciclo de trabajo en AC, temperatura de compensación, resistencia de referencia en dBm, etc.).</li>"
+            "<li><b>Estadísticas:</b> Se calculan automáticamente los valores Mínimo, Máximo, Promedio y la diferencia (Δ) desde el inicio de la sesión.</li>"
+            "</ul>"
+            "<h3>3. Registro de Datos (Logging)</h3>"
+            "<ul>"
+            "<li><b>Iniciar Registro:</b> Presione el botón 'Logging' en la barra de herramientas superior para comenzar a almacenar las lecturas.</li>"
+            "<li><b>Detener Registro:</b> Presione 'Parar' para pausar la captura. Los datos se mostrarán en la pestaña <i>Registro de Datos</i>.</li>"
+            "<li><b>Exportar a CSV:</b> Puede guardar sus datos en un archivo CSV presionando el botón 'CSV' o 'Guardar CSV'.</li>"
+            "<li><b>Importar CSV:</b> Use 'Abrir CSV' para cargar un archivo previamente registrado y analizarlo en la pestaña de gráficos.</li>"
+            "</ul>"
+            "<h3>4. Análisis en Gráficos</h3>"
+            "<ul>"
+            "<li><b>Zoom:</b> Use el mouse para hacer clic y arrastrar sobre el área del gráfico que desea ampliar (Zoom). Para restablecer la vista completa, presione el botón de reinicio en la barra de herramientas del gráfico.</li>"
+            "<li><b>Visualización de Valores (Hover):</b> Al desplazar el cursor del mouse sobre las líneas del gráfico, se mostrará dinámicamente una etiqueta flotante indicando el valor de la muestra y el tiempo transcurrido en esa coordenada.</li>"
+            "<li><b>Histograma:</b> Muestra la distribución estadística de los valores registrados para un análisis de dispersión rápida.</li>"
+            "</ul>"
+            "<h3>5. Descarga de Memoria Interna</h3>"
+            "<ul>"
+            "<li><b>Pestaña Memoria:</b> En multímetros con memoria interna de almacenamiento (como el Victor 98A+ o Fluke 289), haga clic en 'Memoria' en la barra de herramientas para iniciar la lectura y descarga de registros manuales y temporizados.</li>"
+            "</ul>"
+        )
+        QMessageBox.about(self, "Instrucciones de Uso", instructions_html)
 
     def _show_changelog(self):
-        QMessageBox.about(self, "Cambios de Versión",
-            f"<h2>Novedades en DMMView v{VERSION}</h2>"
-            "<ul>"
-            "<li>Se añadió soporte oficial para <b>Windows 10/11</b> con fuentes optimizadas (Segoe UI).</li>"
-            "<li>Se incorporó un nuevo <b>icono profesional</b> para la aplicación y el ejecutable.</li>"
-            "<li>Se corrigieron fallos de estabilidad al cambiar entre diferentes instrumentos.</li>"
-            "<li>Se tradujeron las configuraciones de los gráficos al español.</li>"
-            "<li>Se optimizó el tamaño de los controles en el panel de gráficos.</li>"
-            "<li>Se añadieron implementaciones para los multímetros <b>UNI-T UT-181</b>, <b>OWON XDM1041</b> y <b>OWON XDM3041</b>.</li>"
-            "</ul>")
+        changelog_html = (
+            f"<h2>Historial de Cambios - DMMView</h2>"
+            f"<h3>Versión {VERSION} (Actual)</h3>"
+            f"<ul>"
+            f"<li><b>Victor 98A+ - Corrección en Continuidad:</b> Corregido el rango de continuidad a 200Ω y solucionada la detección de sobrecarga (OL) para valores con signo (+FFFFFF/-FFFFFF), evitando que la barra analógica se quede vacía.</li>"
+            f"<li><b>Victor 98A+ - Modo VFC:</b> Se añadió soporte para el filtro VFC (código de función 'ACV~ VFC'), mapeando correctamente la unidad de tensión V y el rango de 1000V (código de rango 0x30).</li>"
+            f"<li><b>Victor 98A+ - Modo dBm y RTD:</b> Modificadas las unidades de los paneles secundarios/terciarios. Ahora el valor de referencia de resistencia en dBm muestra la unidad Ω en lugar de dBm, y en temperatura RTD la resistencia del sensor muestra kΩ en lugar de mV.</li>"
+            f"<li><b>Documentación técnica de protocolos:</b> Se creó el directorio de documentación <code>doc/</code> con especificaciones de los protocolos de comunicación para desarrolladores.</li>"
+            f"<li><b>Mejoras del README y GitHub:</b> README.md actualizado con instrucciones de instalación, soporte multiplataforma e inclusión de capturas de pantalla.</li>"
+            f"</ul>"
+            f"<h3>Versión 3.3.0</h3>"
+            f"<ul>"
+            f"<li>Se añadió soporte oficial para <b>Windows 10/11</b> con fuentes optimizadas (Segoe UI).</li>"
+            f"<li>Se incorporó un nuevo <b>icono profesional</b> para la aplicación y el ejecutable.</li>"
+            f"<li>Se corrigieron fallos de estabilidad al cambiar entre diferentes instrumentos.</li>"
+            f"<li>Se tradujeron las configuraciones de los gráficos al español.</li>"
+            f"<li>Se optimizó el tamaño de los controles en el panel de gráficos.</li>"
+            f"<li>Se añadieron implementaciones para los multímetros <b>UNI-T UT-181</b>, <b>OWON XDM1041</b> y <b>OWON XDM3041</b>.</li>"
+            f"</ul>"
+        )
+        QMessageBox.about(self, "Cambios de Versión", changelog_html)
 
     def _show_about(self):
         QMessageBox.about(self, "Acerca de DMMView",

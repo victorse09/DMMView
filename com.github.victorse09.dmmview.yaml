@@ -1,0 +1,50 @@
+id: com.github.victorse09.dmmview
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: dmmview
+rename-icon: dmmview
+finish-args:
+  - --device=all
+  - --socket=x11
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --share=ipc
+  - --share=network
+modules:
+  - name: python3-deps
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - pip3 install --verbose --prefix=${FLATPAK_DEST} PyQt6 matplotlib pyserial
+    sources:
+      - type: inline
+        dest-filename: README
+        contents: Install python dependencies
+
+  - name: dmmview
+    buildsystem: simple
+    build-commands:
+      # Crear directorios de instalación
+      - mkdir -p /app/bin
+      - mkdir -p /app/share/dmmview
+      - mkdir -p /app/share/applications
+      - mkdir -p /app/share/icons/hicolor/512x512/apps
+
+      # Copiar código fuente y recursos
+      - cp -r * /app/share/dmmview/
+
+      # Crear lanzador ejecutable
+      - echo '#!/bin/sh' > /app/bin/dmmview
+      - echo 'cd /app/share/dmmview' >> /app/bin/dmmview
+      - echo 'exec python3 dmmview.py "$@"' >> /app/bin/dmmview
+      - chmod +x /app/bin/dmmview
+
+      # Instalar archivo desktop y su icono
+      - cp ui/icon.png /app/share/icons/hicolor/512x512/apps/dmmview.png
+      - cp dmmview.desktop /app/share/applications/com.github.victorse09.dmmview.desktop
+    sources:
+      - type: dir
+        path: .

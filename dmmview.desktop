@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=DMMView
+Comment=Digital Multimeter Viewer & Logger
+Exec=dmmview
+Icon=com.github.victorse09.dmmview
+Terminal=false
+Categories=Utility;Development;Engineering;
+Keywords=multimeter;dmm;logging;serial;
